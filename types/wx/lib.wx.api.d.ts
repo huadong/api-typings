@@ -15772,11 +15772,11 @@ wx.writeBLECharacteristicValue({
     /** 接口调用成功的回调函数 */
     type WxStopRecordSuccessCallback = (res: GeneralCallbackResult) => void
 }
-declare const console: WechatMiniprogram.Console
+// declare const console: WechatMiniprogram.Console
 declare const wx: WechatMiniprogram.Wx
-declare function require(module: string): any
-declare let module: { exports: any }
-declare let exports: any
+// declare function require(module: string): any
+// declare let module: { exports: any }
+// declare let exports: any
 
 /** [Promise createBLEPeripheralServer()](https://developers.weixin.qq.com/miniprogram/dev/api/device/bluetooth/createBLEPeripheralServer.html)
  *

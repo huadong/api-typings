@@ -1,5 +1,5 @@
 {
-  "name": "miniprogram-api-typings",
+  "name": "@zhuyin/mp-api-typings",
   "version": "2.10.1-1",
   "description": "Type definitions for APIs of Wechat Mini Program in TypeScript",
   "main": "./index.d.ts",

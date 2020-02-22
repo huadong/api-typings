@@ -84,9 +84,9 @@ interface ICloudMetaData {
 
 declare class InternalSymbol {}
 
-interface AnyObject {
-    [x: string]: any
-}
+// interface AnyObject {
+//     [x: string]: any
+// }
 
 type AnyArray = any[]
 
