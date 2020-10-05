@@ -1,10 +1,15 @@
 {
   "name": "@zhuyin/mp-api-typings",
   "version": "3.1.2",
+  "private": false,
   "beta": "true",
   "description": "Type definitions for APIs of Wechat Mini Program in TypeScript",
   "main": "./index.d.ts",
   "types": "./index.d.ts",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "scripts": {
     "test": "npm run tsd && npm run eslint",
     "tsd": "tsd",
