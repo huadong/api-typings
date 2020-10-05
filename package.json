@@ -1,13 +1,14 @@
 {
   "name": "@zhuyin/mp-api-typings",
-  "version": "2.10.1-1",
+  "version": "3.1.2",
+  "beta": "true",
   "description": "Type definitions for APIs of Wechat Mini Program in TypeScript",
   "main": "./index.d.ts",
   "types": "./index.d.ts",
   "scripts": {
-    "test": "npm run tsd && npm run tslint",
+    "test": "npm run tsd && npm run eslint",
     "tsd": "tsd",
-    "tslint": "tslint --project ."
+    "eslint": "eslint --config .eslintrc.js types/**/*.ts"
   },
   "repository": {
     "type": "git",
@@ -21,9 +22,11 @@
   "homepage": "https://github.com/wechat-miniprogram/api-typings#readme",
   "dependencies": {},
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.1.1",
+    "@typescript-eslint/parser": "^4.1.1",
+    "eslint": "^7.9.0",
     "tsd": "^0.11.0",
-    "tslint": "^5.20.0",
-    "typescript": "^3.5.3"
+    "typescript": "^4.0.3"
   },
   "tsd": {
     "directory": "test"
@@ -31,7 +34,6 @@
   "files": [
     "LICENSE",
     "CHANGELOG.md",
-    "VERSIONS.md",
     "README.md",
     "README-en.md",
     "index.d.ts",

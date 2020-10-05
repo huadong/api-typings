@@ -206,9 +206,14 @@ import WX = WechatMiniprogram
 
 // https://github.com/wechat-miniprogram/api-typings/issues/88
 {
-  wx.canvasToTempFilePath({ canvas: '#canvas' })
+  wx.createSelectorQuery()
+    .select('#canvas')
+    .fields({ node: true })
+    .exec(res => {
+      wx.canvasToTempFilePath({ canvas: res[0].node })
+      wx.canvasToTempFilePath({ canvas: res[0].node, quality: 0.5 })
+    })
   wx.canvasToTempFilePath({ canvasId: '' })
-  wx.canvasToTempFilePath({ canvas: '', quality: 0.5 })
 }
 
 // https://github.com/wechat-miniprogram/api-typings/issues/89
@@ -266,5 +271,104 @@ import WX = WechatMiniprogram
         },
       })
     },
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/133
+{
+  type IData = {
+    name: string,
+  }
+  type IProperty = {
+    id: typeof Number,
+  }
+  type IMethod = {
+    setJob(job: string): void,
+  }
+  type ICustomInstanceProperty = {
+    job: string,
+  }
+  Component<IData, IProperty, IMethod, ICustomInstanceProperty>({
+    properties: {
+      id: Number,
+    },
+
+    data: {
+      name: '',
+    },
+
+    methods: {
+      setJob(job) {
+        this.job = job
+        expectType<string>(this.job)
+      },
+    },
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/134
+{
+  const ctx = wx.createMapContext('map')
+  ctx.getRegion({
+    success(res) {
+      expectType<number>(res.southwest.longitude)
+      expectType<number>(res.southwest.latitude)
+      expectType<number>(res.northeast.longitude)
+      expectType<number>(res.northeast.latitude)
+    },
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/135
+{
+  App({
+    onThemeChange(res) {
+      expectType<'light' | 'dark'>(res.theme)
+    },
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/136
+{
+  Page({
+    onAddToFavorites(res) {
+      if (res.webviewUrl) {
+        // webview 页面返回 webviewUrl
+        expectType<string>(res.webviewUrl)
+      }
+      return {
+        title: '自定义标题',
+        imageUrl: 'http://demo.png',
+        query: 'name=xxx&age=xxx',
+      }
+    },
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/154
+{
+  wx.requestPayment({
+    timeStamp: '',
+    nonceStr: '',
+    package: '',
+    signType: 'MD5',
+    paySign: '',
+  })
+  wx.requestPayment({
+    timeStamp: '',
+    nonceStr: '',
+    package: '',
+    signType: 'RSA',
+    paySign: '',
+  })
+}
+
+// https://github.com/wechat-miniprogram/api-typings/issues/157
+{
+  wx.saveFile({
+    tempFilePath: '',
+    success(res) {
+      expectType<string>(res.savedFilePath)
+    }
   })
 }

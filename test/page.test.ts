@@ -199,3 +199,41 @@ Page<DataType, CustomOption>({
     expectType<string[]>(this.data.logs)
   },
 })
+
+Page({
+  test() {
+    const channel = this.getOpenerEventChannel()
+    expectType<WechatMiniprogram.EventChannel>(channel)
+    channel.emit('test', {})
+    channel.on('xxx', () => {})
+    expectError(channel.emit(1, 2))
+  },
+})
+
+Page({
+  onAddToFavorites(res) {
+    // webview 页面返回 webviewUrl
+    if (res.webviewUrl) {
+      console.log('WebviewUrl: ', res.webviewUrl)
+    }
+    return {
+      title: '自定义标题',
+      imageUrl: 'http://demo.png',
+      query: 'name=xxx&age=xxx',
+    }
+  },
+})
+
+Page({
+  data: { a: '123' },
+  onShow() {
+    expectType<() => number>(this.fn)
+  },
+  fn() {
+    const a: number = 1
+    return a
+  },
+  onShareAppMessage(): WechatMiniprogram.Page.ICustomShareContent {
+    return { title: this.data.a, imageUrl: '', path: '' }
+  },
+})
