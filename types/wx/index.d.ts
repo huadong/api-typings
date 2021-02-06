@@ -47,13 +47,13 @@ declare namespace WechatMiniprogram {
         : Promise<Parameters<Exclude<T['success'], undefined>>[0]>
 }
 
-declare const console: WechatMiniprogram.Console
+// declare const console: WechatMiniprogram.Console
 declare const wx: WechatMiniprogram.Wx
 /** 引入模块。返回模块通过 `module.exports` 或 `exports` 暴露的接口。 */
-declare function require(
-    /** 需要引入模块文件相对于当前文件的相对路径，或 npm 模块名，或 npm 模块路径。不支持绝对路径 */
-    module: string
-): any
+// declare function require(
+//     /** 需要引入模块文件相对于当前文件的相对路径，或 npm 模块名，或 npm 模块路径。不支持绝对路径 */
+//     module: string
+// ): any
 /** 引入插件。返回插件通过 `main` 暴露的接口。 */
 declare function requirePlugin(
     /** 需要引入的插件的 alias */
@@ -66,9 +66,9 @@ declare function requirePlugin(
  * 最低基础库： `2.11.1` */
 declare function requireMiniProgram(): any
 /** 当前模块对象 */
-declare let module: {
-    /** 模块向外暴露的对象，使用 `require` 引用该模块时可以获取 */
-    exports: any
-}
-/** `module.exports` 的引用 */
-declare let exports: any
+// declare let module: {
+//     /** 模块向外暴露的对象，使用 `require` 引用该模块时可以获取 */
+//     exports: any
+// }
+// /** `module.exports` 的引用 */
+// declare let exports: any

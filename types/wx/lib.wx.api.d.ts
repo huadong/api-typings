@@ -18935,8 +18935,6 @@ wx.writeBLECharacteristicValue({
     type WxStopRecordSuccessCallback = (res: GeneralCallbackResult) => void
 }
 
-declare const wx: WechatMiniprogram.Wx
-
 /** [clearInterval(number intervalID)](https://developers.weixin.qq.com/miniprogram/dev/api/base/timer/clearInterval.html)
  *
  * 取消由 setInterval 设置的定时器。 */
