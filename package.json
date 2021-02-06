@@ -1,6 +1,6 @@
 {
   "name": "@zhuyin/mp-api-typings",
-  "version": "3.1.2",
+  "version": "3.2.2",
   "private": false,
   "beta": "true",
   "description": "Type definitions for APIs of Wechat Mini Program in TypeScript",
