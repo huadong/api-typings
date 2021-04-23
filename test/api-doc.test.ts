@@ -455,8 +455,12 @@ import { expectType } from 'tsd'
 {
   const worker = wx.createWorker('workers/request/index.js') // 文件名指定 worker 的入口文件路径，绝对路径
 
-  worker.onMessage(function(res) {
-    expectType<Record<string, any>>(res.message)
+  worker.onMessage(function (res) {
+    expectType<WechatMiniprogram.WorkerOnMessageCallbackResult>(res)
+  })
+  // 监听worker被系统回收事件
+  worker.onProcessKilled(function () {
+    console.log('worker has been killed')
   })
 
   worker.postMessage({
@@ -504,6 +508,17 @@ import { expectType } from 'tsd'
           },
         })
       }
+    },
+  })
+}
+
+// Test case from `wx.authorizeForMiniProgram`
+{
+  wx.authorizeForMiniProgram({
+    scope: 'scope.record',
+    success() {
+      // 用户已经同意小程序使用录音功能，后续调用 wx.startRecord 接口不会弹窗询问
+      wx.startRecord()
     },
   })
 }
@@ -895,10 +910,22 @@ import { expectType } from 'tsd'
 
 // Test case from `wx.getRealtimeLogManager`
 {
-  const logger = wx.getRealtimeLogManager()
-  logger.info({ str: 'hello world' }, 'info log', 100, [1, 2, 3])
-  logger.error({ str: 'hello world' }, 'error log', 100, [1, 2, 3])
-  logger.warn({ str: 'hello world' }, 'warn log', 100, [1, 2, 3])
+  // 小程序端
+  {
+    const logger = wx.getRealtimeLogManager()
+    logger.info({ str: 'hello world' }, 'info log', 100, [1, 2, 3])
+    logger.error({ str: 'hello world' }, 'error log', 100, [1, 2, 3])
+    logger.warn({ str: 'hello world' }, 'warn log', 100, [1, 2, 3])
+  }
+
+  // 插件端，基础库 2.16.0 版本后支持，只允许采用 key-value 的新格式上报
+  {
+    const logManager = wx.getRealtimeLogManager()
+    const logger = logManager.tag('plugin-log1')
+    logger.info('key1', 'value1')
+    logger.error('key2', { str: 'value2' })
+    logger.warn('key3', 'value3')
+  }
 }
 
 // Test case from `wx.getSavedFileInfo`
@@ -935,7 +962,22 @@ import { expectType } from 'tsd'
     success(res) {
       expectType<boolean | undefined>(res.authSetting['scope.address'])
       expectType<boolean>(res.subscriptionsSetting.mainSwitch)
-      expectType<Record<string, any>>(res.subscriptionsSetting.itemSettings)
+      expectType<Record<string, any> | undefined>(res.subscriptionsSetting.itemSettings)
+    },
+  })
+}
+
+// Test case from `SubscriptionsSetting`
+{
+  wx.getSetting({
+    withSubscriptions: true,
+    success(res) {
+      expectType<undefined | boolean>(res.authSetting['scope.userInfo'])
+      expectType<undefined | boolean>(res.authSetting['scope.userLocation'])
+      expectType<boolean>(res.subscriptionsSetting.mainSwitch)
+      if (res.subscriptionsSetting.itemSettings !== undefined) {
+        expectType<any>(res.subscriptionsSetting.itemSettings.SYS_MSG_TYPE_INTERACTIVE)
+      }
     },
   })
 }
@@ -1012,6 +1054,21 @@ import { expectType } from 'tsd'
   })
 }
 
+// Test case from `wx.getSystemInfoAsync`
+{
+  wx.getSystemInfoAsync({
+    success (res) {
+      expectType<string>(res.model)
+      expectType<number>(res.pixelRatio)
+      expectType<number>(res.windowWidth)
+      expectType<number>(res.windowHeight)
+      expectType<string>(res.language)
+      expectType<string>(res.version)
+      expectType<string>(res.platform)
+    }
+  })
+}
+
 // Test case from `wx.getUserInfo`
 {
   // 必须是在用户已经授权的情况下调用
@@ -1052,6 +1109,13 @@ import { expectType } from 'tsd'
 // Test case from `wx.hideShareMenu`
 {
   wx.hideShareMenu()
+}
+
+// Test case from `wx.hideShareMenu`
+{
+  wx.hideShareMenu({
+    menus: ['shareAppMessage', 'shareTimeline'],
+  })
 }
 
 // Test case from `wx.loadFontFace`
@@ -1743,6 +1807,14 @@ import { expectType } from 'tsd'
   })
 }
 
+// Test case from `wx.showShareMenu`
+{
+  wx.showShareMenu({
+    withShareTicket: true,
+    menus: ['shareAppMessage', 'shareTimeline'],
+  })
+}
+
 // Test case from `wx.showToast`
 {
   wx.showToast({
@@ -1925,6 +1997,23 @@ import { expectType } from 'tsd'
   })
 }
 
+// Test case from `wx.updateShareMenu`
+{
+  // 转发私密消息
+  wx.updateShareMenu({
+    isPrivateMessage: true,
+    activityId: 'xxx',
+    templateInfo: {
+      parameterList: [{
+        name: '',
+        value: '',
+      }]
+    },
+    success() {},
+    fail() {},
+  })
+}
+
 // Test case from `wx.uploadFile`
 {
   wx.chooseImage({
@@ -1974,6 +2063,28 @@ import { expectType } from 'tsd'
 
   worker.postMessage({
     msg: 'hello from main',
+  })
+}
+
+// Test case from `wx.createWorker`
+{
+  // 创建普通worker
+  wx.createWorker('workers/index.js')
+}
+
+// Test case from `wx.createWorker`
+{
+  // 创建实验worker
+  const worker = wx.createWorker('workers/index.js', {
+    useExperimentalWorker: true,
+  })
+
+  // 监听worker被系统回收事件
+  worker.onProcessKilled(() => {
+    // 重新创建一个worker
+    wx.createWorker('workers/index.js', {
+      useExperimentalWorker: true,
+    })
   })
 }
 
@@ -3001,6 +3112,25 @@ import { expectType } from 'tsd'
   })
 }
 
+// Test case from `MapContext.on`
+{
+  Page({
+    mapCtx: {} as WechatMiniprogram.MapContext,
+    onReady() {
+      // 使用 wx.createMapContext 获取 map 上下文
+      this.mapCtx = wx.createMapContext('myMap')
+    },
+    method() {
+      this.mapCtx.on('markerClusterCreate', (res) => {
+        expectType<any>(res)
+      })
+      this.mapCtx.on('markerClusterClick', (res) => {
+        expectType<any>(res)
+      })
+    }
+  })
+}
+
 // Test case from `wx.setEnableDebug`
 {
   // 打开调试
@@ -3063,4 +3193,334 @@ import { expectType } from 'tsd'
 // Test case from `wx.reportPerformance`
 {
   wx.reportPerformance(1101, 680)
+  wx.reportPerformance(1101, 680, 'custom')
+}
+
+// Test case from `wx.getRandomValues`
+{
+  wx.getRandomValues({
+    length: 6, // 生成 6 个字节长度的随机数
+    success: res => {
+      expectType<ArrayBuffer>(res.randomValues) // 转换为 base64 字符串后打印
+    }
+  })
+}
+
+// Test case from `wx.getGroupEnterInfo`
+{
+  wx.getGroupEnterInfo({
+    success(res) {
+      expectType<string>(res.errMsg)
+      expectType<string>(res.encryptedData)
+      expectType<string>(res.iv)
+    }
+  })
+}
+
+// Test case from `wx.getPerformance`
+{
+  const performance = wx.getPerformance()
+  const observer = performance.createObserver(entryList => {
+    console.log(entryList.getEntries())
+  })
+  observer.observe({ entryTypes: ['render', 'script'] })
+}
+
+// Test case from `wx.authPrivateMessage`
+{
+  wx.authPrivateMessage({
+    shareTicket: 'xxxxxx',
+    success(res) {
+      expectType<boolean>(res.valid)
+      expectType<string>(res.iv)
+      expectType<string>(res.encryptedData)
+    },
+    fail(res) {
+      expectType<string>(res.errMsg)
+    },
+  })
+}
+
+// Test case from `wx.createMediaAudioPlayer`
+{
+  // 创建视频解码器，具体参数见 createVideoDecoder 文档
+  const videoDecoder = wx.createVideoDecoder()
+  // 创建媒体音频播放器
+  const mediaAudioPlayer = wx.createMediaAudioPlayer()
+  // 启动视频解码器
+  videoDecoder.start({
+    source: ''
+  })
+  // 启动播放器
+  mediaAudioPlayer.start().then(() => {
+    // 添加播放器音频来源
+    mediaAudioPlayer.addAudioSource(videoDecoder).then(res => {
+      videoDecoder.getFrameData() // 建议在 requestAnimationFrame 里获取每一帧视频数据
+      console.log(res)
+    })
+
+    // 移除播放器音频来源
+    mediaAudioPlayer.removeAudioSource(videoDecoder).then()
+    // 停止播放器
+    mediaAudioPlayer.stop().then()
+    // 销毁播放器
+    mediaAudioPlayer.destroy().then()
+    // 设置播放器音量
+    mediaAudioPlayer.volume = 0.5
+  })
+}
+
+// Test case from `ScrollViewContext`
+{
+  wx.createSelectorQuery()
+    .select('#scrollview')
+    .node()
+    .exec(res => {
+      const scrollView = res[0].node
+      scrollView.scrollEnabled = false
+    })
+}
+
+// Test case from `wx.getUserProfile`
+{
+  Page({
+    data: {
+      userInfo: {},
+      hasUserInfo: false,
+      canIUseGetUserProfile: false,
+    },
+    onLoad() {
+      if (wx.getUserProfile !== undefined) {
+        this.setData({
+          canIUseGetUserProfile: true,
+        })
+      }
+    },
+    getUserProfile() {
+      // 推荐使用wx.getUserProfile获取用户信息，开发者每次通过该接口获取用户个人信息均需用户确认
+      // 开发者妥善保管用户快速填写的头像昵称，避免重复弹窗
+      wx.getUserProfile({
+        desc: '用于完善会员资料', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
+        success: res => {
+          this.setData({
+            userInfo: res.userInfo,
+            hasUserInfo: true,
+          })
+        },
+      })
+    },
+    getUserInfo(e: WechatMiniprogram.CustomEvent<{ userInfo: WechatMiniprogram.UserInfo }>) {
+      // 不推荐使用getUserInfo获取用户信息，预计自2021年4月13日起，getUserInfo将不再弹出弹窗，并直接返回匿名的用户个人信息
+      this.setData({
+        userInfo: e.detail.userInfo,
+        hasUserInfo: true,
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.close`
+{
+  const fs = wx.getFileSystemManager()
+  // 打开文件
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      // 关闭文件
+      fs.close({
+        fd: res.fd,
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.closeSync`
+{
+  const fs = wx.getFileSystemManager()
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+
+  // 关闭文件
+  fs.closeSync({ fd: fd })
+}
+
+// Test case from `FileSystemManager.fstat`
+{
+  const fs = wx.getFileSystemManager()
+  // 打开文件
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      // 获取文件的状态信息
+      fs.fstat({
+        fd: res.fd,
+        success(res) {
+          expectType<WechatMiniprogram.Stats>(res.stats)
+        },
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.fstatSync`
+{
+  const fs = wx.getFileSystemManager()
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+  const stats = fs.fstatSync({ fd: fd })
+  expectType<WechatMiniprogram.Stats>(stats)
+}
+
+// Test case from `FileSystemManager.ftruncate`
+{
+  const fs = wx.getFileSystemManager()
+  // 打开文件
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      // 对文件内容进行截断操作
+      fs.ftruncate({
+        fd: res.fd,
+        length: 10, // 从第10个字节开始截断文件
+        success(res) {
+          console.log(res)
+        },
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.ftruncateSync`
+{
+  const fs = wx.getFileSystemManager()
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+  fs.ftruncateSync({
+    fd: fd,
+    length: 10, // 从第10个字节开始截断文件
+  })
+}
+
+// Test case from `FileSystemManager.open`
+{
+  const fs = wx.getFileSystemManager()
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      expectType<string>(res.fd)
+    },
+  })
+}
+
+// Test case from `FileSystemManager.openSync`
+{
+  const fs = wx.getFileSystemManager()
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+  expectType<string>(fd)
+}
+
+// Test case from `FileSystemManager.read`
+{
+  const fs = wx.getFileSystemManager()
+  const ab = new ArrayBuffer(1024)
+  // 打开文件
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      // 读取文件到 ArrayBuffer 中
+      fs.read({
+        fd: res.fd,
+        arrayBuffer: ab,
+        length: 10,
+        success(res) {
+          console.log(res)
+        },
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.readSync`
+{
+  const fs = wx.getFileSystemManager()
+  const ab = new ArrayBuffer(1024)
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+  const res = fs.readSync({
+    fd: fd,
+    arrayBuffer: ab,
+    length: 10,
+  })
+  console.log(res)
+}
+
+// Test case from `FileSystemManager.truncate`
+{
+  const fs = wx.getFileSystemManager()
+  fs.truncate({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    length: 10, // 从第10个字节开始截断
+    success(res) {
+      console.log(res)
+    },
+  })
+}
+
+// Test case from `FileSystemManager.truncateSync`
+{
+  const fs = wx.getFileSystemManager()
+  fs.truncateSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    length: 10, // 从第10个字节开始截断
+  })
+}
+
+// Test case from `FileSystemManager.write`
+{
+  const fs = wx.getFileSystemManager()
+  // 打开文件
+  fs.open({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+    success(res) {
+      // 写入文件
+      fs.write({
+        fd: res.fd,
+        data: 'some text',
+        success(res) {
+          expectType<number>(res.bytesWritten)
+        },
+      })
+    },
+  })
+}
+
+// Test case from `FileSystemManager.writeSync`
+{
+  const fs = wx.getFileSystemManager()
+  const fd = fs.openSync({
+    filePath: `${wx.env.USER_DATA_PATH}/hello.txt`,
+    flag: 'a+',
+  })
+  const res = fs.writeSync({
+    fd: fd,
+    data: 'some text',
+  })
+  expectType<number>(res.bytesWritten)
 }
